@@ -1,6 +1,6 @@
 package org.bitcoins.gui.dlc.dialog
 
-import org.bitcoins.cli.CliCommand.{AcceptDLCCliCommand, AcceptDLCOffer}
+import org.bitcoins.cli.CliCommand._
 import org.bitcoins.core.protocol.dlc.models._
 import org.bitcoins.core.protocol.tlv._
 import org.bitcoins.gui.GlobalData
@@ -12,6 +12,7 @@ import scalafx.scene.control._
 import scalafx.scene.layout._
 import scalafx.stage.Window
 
+import java.net.{InetSocketAddress, URI}
 import scala.collection._
 import scala.util.{Failure, Success, Try}
 
@@ -33,20 +34,37 @@ class AcceptOfferDialog {
       minWidth = 300
     }
 
-    var nextRow: Int = 2
+    val peerAddressTF = new TextField() {
+      minWidth = 300
+      promptText = "(optional)"
+    }
+
+    var nextRow: Int = 0
     val gridPane = new GridPane {
       alignment = Pos.Center
       padding = Insets(top = 10, right = 10, bottom = 10, left = 10)
       hgap = 5
       vgap = 5
 
-      add(new Label("DLC Offer") {
-            tooltip = Tooltip("Offer message given from your counter party.")
+      add(
+        new Label("DLC Offer") {
+          tooltip = Tooltip("Offer message given from your counter party.")
+          tooltip.value.setShowDelay(new javafx.util.Duration(100))
+        },
+        0,
+        nextRow
+      )
+      add(offerTLVTF, 1, nextRow)
+      nextRow += 1
+
+      add(new Label("Peer Address") {
+            tooltip = Tooltip("Peer's IP or onion address")
             tooltip.value.setShowDelay(new javafx.util.Duration(100))
           },
           0,
-          0)
-      add(offerTLVTF, 1, 0)
+          nextRow)
+      add(peerAddressTF, 1, nextRow)
+      nextRow += 1
     }
 
     def showOfferTerms(offer: DLCOfferTLV): Unit = {
@@ -224,7 +242,15 @@ class AcceptOfferDialog {
         val offerHex = offerTLVTF.text.value
         val offer = LnMessageFactory(DLCOfferTLV).fromHex(offerHex)
 
-        Some(AcceptDLCOffer(offer))
+        if (peerAddressTF.text.value.nonEmpty) {
+          val peer = new URI(peerAddressTF.text.value)
+          val peerAddr =
+            InetSocketAddress.createUnresolved(peer.getHost, peer.getPort)
+
+          Some(AcceptDLC(offer, peerAddr))
+        } else {
+          Some(AcceptDLCOffer(offer))
+        }
       } else None
 
     val result = dialog.showAndWait()
