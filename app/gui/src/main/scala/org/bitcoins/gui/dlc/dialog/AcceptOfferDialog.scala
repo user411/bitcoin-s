@@ -243,7 +243,8 @@ class AcceptOfferDialog {
         val offer = LnMessageFactory(DLCOfferTLV).fromHex(offerHex)
 
         if (peerAddressTF.text.value.nonEmpty) {
-          val peer = new URI(peerAddressTF.text.value)
+          val peer = new URI("tcp://" + peerAddressTF.text.value)
+
           val peerAddr =
             InetSocketAddress.createUnresolved(peer.getHost, peer.getPort)
 
