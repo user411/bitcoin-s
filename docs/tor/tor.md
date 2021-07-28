@@ -1,6 +1,6 @@
 ---
 id: tor
-title: Tor
+title: Tor Setup
 ---
 
 It is possible to run Bitcoin-S through tor.
