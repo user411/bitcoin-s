@@ -134,8 +134,8 @@ You can also manually configure your node to be reachable from the Tor network. 
 your `/etc/tor/torrc` (or equivalent config file, mac is located at `/opt/homebrew/etc/tor/torcc`):
 
 ```
-    HiddenServiceDir /var/lib/tor/dlc-service/
-    HiddenServicePort 2862 127.0.0.1:2862
+HiddenServiceDir /var/lib/tor/dlc-service/
+HiddenServicePort 2862 127.0.0.1:2862
 ```
 
 Then to get your host address simply do this after restarting your tor daemon.
