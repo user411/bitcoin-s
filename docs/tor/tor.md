@@ -4,9 +4,10 @@ title: Tor Setup
 ---
 
 It is possible to run Bitcoin-S through tor.
-[Tor](https://www.torproject.org/) is an onion routed private network that allows us to send and receive messages in an anonymous manner.
-Using tor in conjunction with Bitcoin-S allows you to be more private when syncing the blockchain,
-as well as allows for sending and receiving DLC messages without the need for a static IP address or opening/forwarding of ports.
+[Tor](https://www.torproject.org/) is an onion routed private network that allows us to send and receive messages in an
+anonymous manner. Using tor in conjunction with Bitcoin-S allows you to be more private when syncing the blockchain, as
+well as allows for sending and receiving DLC messages without the need for a static IP address or opening/forwarding of
+ports.
 
 ## Installing Tor
 
@@ -14,9 +15,13 @@ as well as allows for sending and receiving DLC messages without the need for a 
 
 You can install tor using `sudo apt install tor` if on a debian system.
 
+After installing you can start it with `sudo systemctl start tor`
+
 ### Brew
 
-You can install tor using `brew install tor` if on a debian system.
+You can install tor using `brew install tor` if on a mac osx system.
+
+After installing you can start it with `brew services start tor`
 
 ### Other
 
@@ -24,9 +29,8 @@ Otherwise, you can install the Tor Browser from [here](https://www.torproject.or
 
 ## Starting Tor
 
-To connect to onion addresses you need th enable the tor proxy.
-To do so you need to have tor currently running, this can be checked by using the command `sudo systemctl status tor`.
-This should give you an output similar to:
+To connect to onion addresses you need th enable the tor proxy. To do so you need to have tor currently running, this
+can be checked by using the command `sudo systemctl status tor`. This should give you an output similar to:
 
 ```bash
 $ sudo systemctl status tor
@@ -43,38 +47,37 @@ If the output says `Active: active`, then it is running and good to go.
 
 ## Enabling the Tor proxy
 
-Enabling the tor proxy allows you to create outgoing connections over tor.
-This is needed if you want to sync the blockchain over tor, or to accept DLCs over tor.
+Enabling the tor proxy allows you to create outgoing connections over tor. This is needed if you want to sync the
+blockchain over tor, or to accept DLCs over tor.
 
 To enable the tor proxy you simply need to set a couple config options after you have tor running.
 
-You need to enable the proxy and set the host and port configuration options.
-If you are using the default settings you should only need to set `bitcoin-s.proxy.enabled = true`.
+You need to enable the proxy and set the host and port configuration options. If you are using the default settings you
+should only need to set `bitcoin-s.proxy.enabled = true`.
 
 ```$xslt
 bitcoin-s {
     proxy {
         # You can configure SOCKS5 proxy to use Tor for outgoing connections
         enabled = true
-        host = "127.0.0.1"
-        port = 9050
+        sock5 = "127.0.0.1:9050"
     }
 }
 ```
 
 ## Creating our own Tor hidden service
 
-Enabling the tor hidden services allows you to create inbound connections over tor.
+Enabling the tor hidden services allows for inbound connections over tor.
 This is needed if you want to create DLCs over tor.
 
-To enable the tor hidden services you need to set a couple config options after you have tor running in your bitcoin-s config, as well as
-have tor configured for it.
+To enable the tor hidden services you need to set a couple config options after you have tor running in your bitcoin-s
+config, as well as have tor configured for it.
 
 ### Configuring Tor
 
-You may need to set up the Tor Control Port. On Linux distributions there may be
-some or all of the following settings in `/etc/tor/torrc`, generally commented
-out by default (if not, add them):
+You may need to set up the Tor Control Port. On Linux distributions there may be some or all of the following settings
+in `/etc/tor/torrc` for linux or `/opt/homebrew/etc/tor/torcc` for mac, generally commented out by default (if not, add
+them):
 
 ```
 ControlPort 9051
@@ -83,17 +86,16 @@ CookieAuthFileGroupReadable 1
 ```
 
 Add or uncomment those, save, and restart Tor (usually `systemctl restart tor`
-or `sudo systemctl restart tor` on most systemd-based systems, including recent
-Debian and Ubuntu, or just restart the computer).
+or `sudo systemctl restart tor` on most systemd-based systems, including recent Debian and Ubuntu, or just restart the
+computer).
 
-On some systems (such as Arch Linux), you may also need to add the following
-line:
+On some systems (such as Arch Linux), you may also need to add the following line:
 
 ```
 DataDirectoryGroupReadable 1
 ```
 
-You will also need permissions for the auth cookie file, this can be done doing
+You may also need permissions for the auth cookie file, this can be done doing
 
 ```bash
 sudo usermod -a -G debian-tor $USER
@@ -103,8 +105,8 @@ After changing these settings, you will need to restart your computer.
 
 ### Configuring Bitcoin-S
 
-You need to enable tor and set the control option, `127.0.0.1:9051` is the default.
-If you are using the default settings you should only need to set `bitcoin-s.enabled.enabled = true`.
+You need to enable tor and set the control option, `127.0.0.1:9051` is the default. If you are using the default
+settings you should only need to set `bitcoin-s.tor.enabled = true`.
 
 ```$xslt
 bitcoin-s {
@@ -128,8 +130,8 @@ bitcoin-s {
 
 Alternatively, you can manually create a tor hidden service.
 
-You can also manually configure your node to be reachable from the Tor network.
-Add these lines to your `/etc/tor/torrc` (or equivalent config file):
+You can also manually configure your node to be reachable from the Tor network. Add these lines to
+your `/etc/tor/torrc` (or equivalent config file, mac is located at `/opt/homebrew/etc/tor/torcc`):
 
 ```
     HiddenServiceDir /var/lib/tor/dlc-service/

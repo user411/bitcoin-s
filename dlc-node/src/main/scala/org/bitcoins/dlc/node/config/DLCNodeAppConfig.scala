@@ -43,12 +43,11 @@ case class DLCNodeAppConfig(
 
   lazy val socks5ProxyParams: Option[Socks5ProxyParams] = {
     if (config.getBoolean("bitcoin-s.proxy.enabled")) {
+      val uri = new URI("tcp://" + config.getString("bitcoin-s.proxy.sock5"))
+      val sock5 = InetSocketAddress.createUnresolved(uri.getHost, uri.getPort)
       Some(
         Socks5ProxyParams(
-          address = InetSocketAddress.createUnresolved(
-            config.getString("bitcoin-s.proxy.host"),
-            config.getInt("bitcoin-s.proxy.port")
-          ),
+          address = sock5,
           credentialsOpt = None,
           randomizeCredentials = true
         )
