@@ -20,6 +20,7 @@ import org.bitcoins.core.api.node.{
   NodeApi,
   NodeType
 }
+import org.bitcoins.core.protocol.dlc.models.DLCStatus
 import org.bitcoins.core.protocol.transaction.Transaction
 import org.bitcoins.core.util.{NetworkUtil, TimeUtil}
 import org.bitcoins.core.wallet.fee.SatoshisPerVirtualByte
@@ -185,6 +186,8 @@ class BitcoinSServerMain(override val serverArgParser: ServerArgParser)(implicit
                                 serverCmdLineArgs = serverArgParser)
       walletCallbacks = buildWalletCallbacks(server.walletQueue, chainApi)
       _ = walletConf.addCallbacks(walletCallbacks)
+      dlcWalletCallbacks = buildDLCWalletCallback(server.walletQueue)
+      _ = dlcConf.addCallbacks(dlcWalletCallbacks)
       _ = {
         logger.info(
           s"Starting ${nodeConf.nodeType.shortName} node sync, it took=${System
@@ -268,6 +271,8 @@ class BitcoinSServerMain(override val serverArgParser: ServerArgParser)(implicit
                                 serverCmdLineArgs = serverArgParser)
       walletCallbacks = buildWalletCallbacks(server.walletQueue, bitcoind)
       _ = walletConf.addCallbacks(walletCallbacks)
+      dlcWalletCallbacks = buildDLCWalletCallback(server.walletQueue)
+      _ = dlcConf.addCallbacks(dlcWalletCallbacks)
     } yield {
       logger.info(s"Done starting Main!")
       ()
@@ -581,7 +586,7 @@ class BitcoinSServerMain(override val serverArgParser: ServerArgParser)(implicit
           val notification = WalletNotification.TxBroadcastNotification(tx)
           upickle.default.writeJs(notification)(WsPicklers.txBroadcastPickler)
         case x @ (WalletWsType.NewAddress | WalletWsType.ReservedUtxos |
-            WalletWsType.BlockProcessed) =>
+            WalletWsType.BlockProcessed | WalletWsType.DLCStateChange) =>
           sys.error(s"Cannot build tx notification for $x")
       }
 
@@ -589,6 +594,21 @@ class BitcoinSServerMain(override val serverArgParser: ServerArgParser)(implicit
       walletQueue.offer(msg)
     }
     f.map(_ => ())
+  }
+
+  private def buildDLCWalletCallback(
+      walletQueue: SourceQueueWithComplete[Message]): DLCWalletCallbacks = {
+
+    val onStateChange: OnDLCStateChange = { status: DLCStatus =>
+      val notification = WalletNotification.DLCStateChangeNotification(status)
+      val json =
+        upickle.default.writeJs(notification)(WsPicklers.dlcStateChangePickler)
+      val msg = TextMessage.Strict(json.toString())
+      val offerF = walletQueue.offer(msg)
+      offerF.map(_ => ())
+    }
+
+    DLCWalletCallbacks.onDLCStateChange(onStateChange)
   }
 }
 
